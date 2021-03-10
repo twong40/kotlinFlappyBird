@@ -21,15 +21,16 @@ fun main() {
 
 data class Bird(val position: Float)
 data class Walls(
-    val positionY: Float = (60..1220).random().toFloat(),
-    var gap: Float = 150f,
+    val positionY: Float = 0f,
+    var gap: Float = (200..530).random().toFloat(),
     var positionX: Float = 1280f,
 )
 
 class FlappyBird: KtxApplicationAdapter {
     private lateinit var renderer: ShapeRenderer
     private var player = Bird(400f)
-    private var wallsOnScreen = emptyList<Walls>()
+    private var wallsOnScreen = ArrayList<Walls>()
+    private var counter: Float = 0f
 
     override fun create() {
         renderer = ShapeRenderer()
@@ -42,20 +43,26 @@ class FlappyBird: KtxApplicationAdapter {
     }
 
     private fun handleInput() {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.W)) {
-            player = Bird(player.position + 20f)
-        } else if (Gdx.input.isKeyJustPressed(Input.Keys.S)) {
-            player = Bird(player.position - 20f)
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+            player = Bird(player.position + 30f)
         }
     }
     private fun logic() {
-        if (Math.random() > 0.95) {
-            wallsOnScreen = wallsOnScreen + Walls()
+        if (counter > 10000000f) {
+            counter = 0f
+        } else {
+            counter += 1f
         }
+        if (counter % 175f == 0f) {
+            wallsOnScreen.add(Walls())
+        }
+
         wallsOnScreen.forEach {
             it.positionX -= 1f
         }
-        player = Bird(player.position - 1f)
+        if (player.position > 0f) {
+            player = Bird(player.position - 1.5f)
+        }
     }
     private fun draw() {
         clearScreen(0f, 0f, 0f, 0f)
@@ -63,7 +70,8 @@ class FlappyBird: KtxApplicationAdapter {
         renderer.use(ShapeRenderer.ShapeType.Filled) {
             renderer.color = Color.GREEN
             wallsOnScreen.forEach {
-                renderer.rect(it.positionX, it.positionY, 60f, 60f)
+                renderer.rect(it.positionX, it.positionY, 60f, it.gap - 120f)
+                renderer.rect(it.positionX, it.positionY + it.gap, 60f, 720f)
             }
         }
 
