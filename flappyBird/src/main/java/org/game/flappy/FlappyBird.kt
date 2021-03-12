@@ -24,8 +24,10 @@ fun main() {
 data class Bird(val position: Float)
 data class Walls(
     val positionY: Float = 0f,
-    var gap: Float = (200..530).random().toFloat(),
+    var gap: Float = (200..500).random().toFloat(),
+    var gapHeight: Float = (120..240).random().toFloat(),
     var positionX: Float = 1280f,
+    var counted: Boolean = false,
 )
 
 class FlappyBird: KtxApplicationAdapter {
@@ -38,6 +40,7 @@ class FlappyBird: KtxApplicationAdapter {
     private var counter: Float = 0f
     private var isGameOver: Boolean = false
     private var points: Int = 0
+    private var speed: Float = 1f
 
     override fun create() {
         renderer = ShapeRenderer()
@@ -53,8 +56,11 @@ class FlappyBird: KtxApplicationAdapter {
     }
 
     private fun handleInput() {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.W) && player.position < 690f) {
             player = Bird(player.position + 30f)
+        }
+        else if (Gdx.input.isKeyJustPressed(Input.Keys.S) && player.position > 30f) {
+            player = Bird(player.position - 30f)
         }
     }
     private fun logic() {
@@ -69,8 +75,14 @@ class FlappyBird: KtxApplicationAdapter {
                 wallsOnScreen.add(Walls())
             }
             wallsOnScreen.forEach {
-                it.positionX -= 1f
-                if(it.positionX <= -65f) wallsToDelete.add(it)
+                it.positionX -= speed
+                if (it.positionX in 400f..440f && player.position !in (it.gap - it.gapHeight)..it.gap) isGameOver = true
+                if (it.positionX <= -65f) wallsToDelete.add(it)
+                if (it.positionX <= 340f && !it.counted) {
+                    it.counted = true
+                    points += 1
+                    if (points != 0 && points % 10 == 0) speed *= 1.5f
+                }
             }
             wallsToDelete.forEach {
                 wallsOnScreen.remove(it)
@@ -95,7 +107,7 @@ class FlappyBird: KtxApplicationAdapter {
             renderer.use(ShapeRenderer.ShapeType.Filled) {
                 renderer.color = Color.GREEN
                 wallsOnScreen.forEach {
-                    renderer.rect(it.positionX, it.positionY, 60f, it.gap - 120f)
+                    renderer.rect(it.positionX, it.positionY, 60f, it.gap - it.gapHeight)
                     renderer.rect(it.positionX, it.positionY + it.gap, 60f, 720f)
                 }
             }
